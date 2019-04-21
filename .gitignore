@@ -34,4 +34,5 @@
 
 # Qt
 build/
+bin/
 *.pro.user
