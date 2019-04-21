@@ -3,7 +3,6 @@ QT          += widgets qml quick concurrent core-private
 TEMPLATE    = lib
 CONFIG      += staticlib
 TARGET      = goxui
-DEFINES     += GOXUI
 
 HEADERS += \
         $$PWD/goxui.h \
@@ -49,10 +48,8 @@ mac: {
     LIBS += -lX11
 }
 
-# export shared library
+# export library
 header_files.files = $$PWD/goxui.h
-unix {
-    header_files.path = /usr/local/include
-    target.path = /usr/local/lib
-    INSTALLS += target header_files
-}
+header_files.path = $$PWD/../bin
+target.path = $$PWD/../bin
+INSTALLS += target header_files

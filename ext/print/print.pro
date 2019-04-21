@@ -13,11 +13,9 @@ SOURCES += \
 
 # export static library
 header_files.files = $$PWD/goxui_print.h
-unix {
-    header_files.path = /usr/local/include
-    target.path = /usr/local/lib
-    INSTALLS += target header_files
-}
+header_files.path = $$PWD/../../bin
+target.path = $$PWD/../../bin
+INSTALLS += target header_files
 
 # Dependent on goxui
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../core/release/ -lgoxui

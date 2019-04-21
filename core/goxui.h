@@ -5,7 +5,7 @@
 #ifndef GOXUI_H
 #define GOXUI_H
 
-#ifdef GOXUI
+#ifdef Q_DECL_EXPORT
     #define API Q_DECL_EXPORT
 #else
     #define API

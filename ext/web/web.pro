@@ -13,8 +13,6 @@ SOURCES += \
 
 # export static library
 header_files.files = $$PWD/goxui_web.h
-unix {
-    header_files.path = /usr/local/include
-    target.path = /usr/local/lib
-    INSTALLS += target header_files
-}
+header_files.path = $$PWD/../../bin
+target.path = $$PWD/../../bin
+INSTALLS += target header_files

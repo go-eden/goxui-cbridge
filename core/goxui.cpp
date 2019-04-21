@@ -159,7 +159,7 @@ API int ui_start(char *qml) {
     engine->rootContext()->setContextObject(root);
 
     // setup context properties
-    contextProperties.insert("System", new UISystem(engine));
+    contextProperties.insert("system", new UISystem(engine));
     for(auto name : contextProperties.keys()) {
         engine->rootContext()->setContextProperty(name, contextProperties.value(name));
     }

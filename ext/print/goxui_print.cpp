@@ -25,5 +25,5 @@ void Printer::print(QVariant data){
 // exec init
 API void ui_init_print() {
     Printer* printer = new Printer();
-    ui_add_object(const_cast<char *>("Printer"), printer);
+    ui_add_object(const_cast<char *>("printer"), printer);
 }
