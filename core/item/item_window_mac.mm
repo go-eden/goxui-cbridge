@@ -126,21 +126,13 @@ void WindowItem::setTitleBar(WindowTitleItem *item) {
     adjustTitle(this, title);
 }
 
-// 监听事件
+// Handle All event
 bool WindowItem::event(QEvent *event) {
-    // 释放之前缓存的MouseDown事件缓存
+    // release old MouseDown event
     if (event->type() == QEvent::MouseButtonRelease || event->type() == QEvent::FocusOut) {
         this->macLastEvent = nullptr;
     }
     NSView *view = (NSView *)this->winId();
-    qreal newRatio = this->devicePixelRatio();
-    if (view != nullptr && view.layer != nil && oldRatio != newRatio) {
-        qDebug() << "devicePixelRatio changed, force flush" << oldRatio << newRatio;
-        [view.layer setContentsScale: newRatio]; // 主动刷新ratio, 如果失败则下次再刷新
-        QRegion region(0, 0, width(), height());
-        QWindow::exposeEvent(new QExposeEvent(region));
-        oldRatio = newRatio;
-    }
     if (event->type() == QEvent::Resize) {
         adjustTitle(this, title);
     }
@@ -151,6 +143,17 @@ bool WindowItem::event(QEvent *event) {
         window.titlebarAppearsTransparent = true;
         adjustTitle(this, title);
     }
+    // Fix ratio bug for 5.9...
+    if (QT_VERSION_MINOR < 12) {
+        qreal newRatio = this->devicePixelRatio();
+        if (view != nullptr && view.layer != nil && oldRatio != newRatio) {
+            [view.layer setContentsScale: newRatio]; // Force flush ratio
+            QRegion region(0, 0, width(), height());
+            QWindow::exposeEvent(new QExposeEvent(region));
+            oldRatio = newRatio;
+        }
+    }
+    // support fakeClose
     if (event->type() == QEvent::Close && this->fakeClose) {
         this->hide();
         return true;
@@ -158,7 +161,7 @@ bool WindowItem::event(QEvent *event) {
     return QQuickWindow::event(event);
 }
 
-// 原生事件的处理, mac貌似不支持
+// Do nothing for darwin
 bool WindowItem::nativeEvent(const QByteArray &eventType, void *message, long *result) {
     return QQuickWindow::nativeEvent(eventType, message, result);
 }

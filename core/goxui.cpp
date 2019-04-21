@@ -13,7 +13,7 @@
 #include "goxui_p.h"
 
 static PropertyNode *root = nullptr;
-static SingleApplication *app = nullptr;
+static QApplication *app = nullptr;
 static QQmlApplicationEngine *engine = nullptr;
 static QMap<QString, QObject*> contextProperties;
 
@@ -22,16 +22,22 @@ API void ui_init(int argc, char **argv) {
     qSetMessagePattern("%{time yyyy-MM-dd hh:mm:ss} [%{type}] : %{message}");
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-    // qputenv("QML_DISABLE_DISK_CACHE", "1"); // disable cache
-    // qputenv("QSG_RENDER_LOOP", "basic"); // for Qt5.9
-    // QQuickWindow::setSceneGraphBackend(QSGRendererInterface::Software); // for windows vm
+    // For Qt5.9
+    if (QT_VERSION_MINOR != 12) {
+        qputenv("QSG_RENDER_LOOP", "basic");
+        QQuickWindow::setSceneGraphBackend(QSGRendererInterface::Software);
+    }
 
     static QString NULL_Str;
     static int argNum = argc;
-    app = new SingleApplication(argNum, argv);
-    if(app->isSecondary() ) {
-        qDebug() << "app repeated";
-        app->exit(0);
+    if (isEnableSingleApplication()) {
+        app = new SingleApplication(argNum, argv);
+        if(static_cast<SingleApplication *>(app)->isSecondary() ) {
+            qDebug() << "app repeated";
+            app->exit(0);
+        }
+    } else {
+        app = new QApplication(argNum, argv);
     }
 
     // init ui
@@ -145,9 +151,11 @@ API void ui_map_resource(char *prefix, char *path) {
 
 // start Application
 API int ui_start(char *qml) {
-    QObject::connect(app, &SingleApplication::instanceStarted, [=]() {
-        ui_trigger_event(const_cast<char*>("app_active"), UI_TYPE_VOID, nullptr);
-    });
+    if (isEnableSingleApplication()) {
+        QObject::connect(static_cast<SingleApplication *>(app), &SingleApplication::instanceStarted, [=]() {
+            ui_trigger_event(const_cast<char*>("app_active"), UI_TYPE_VOID, nullptr);
+        });
+    }
     QObject::connect(app, &QApplication::applicationStateChanged, [=](Qt::ApplicationState state){
         if (state == Qt::ApplicationActive) {
             ui_trigger_event(const_cast<char*>("app_active"), UI_TYPE_VOID, nullptr);

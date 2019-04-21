@@ -12,6 +12,11 @@
 #include "core/ui_property.h"
 #include "goxui.h"
 
+// check whether enable single-application or not
+inline bool isEnableSingleApplication() {
+    return qgetenv("GOXUI_SINGLE_APPLICATION") != "0";
+}
+
 // convert string data to specified type
 inline void convertStrToVar(char *data, int type, QVariant &ptr) {
     QByteArray array(data);
