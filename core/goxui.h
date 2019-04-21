@@ -24,9 +24,9 @@ extern "C" {  // only need to export C interface if used by C++ source code
 #define UI_TYPE_STRING 6
 
 /**
- * 初始化UI容器, 及QApplication
- * @param argc 启动参数C
- * @param argv 启动参数V
+ * Initilize ui context, and QApplication
+ * @param argc Arguments count
+ * @param argv Arguments value
  */
 API void ui_init(int argc, char **argv);
 
@@ -39,89 +39,91 @@ API void ui_init(int argc, char **argv);
 API void ui_add_object(char *name, void *ptr);
 
 /**
- * 向UI中新增一个变量, 此变量支持属性绑定
+ * Add an named field into QML's context, with specified reader and writer callback.
  *
- * @param name 变量名
- * @param reader 读回调, 返回值由uilib负责free
- * @param writer 写回调
- * @return 是否成功
+ * @param name Field's name
+ * @param reader Field's reader callback
+ * @param writer Field's writer callback
+ * @return success or not
  */
 API int ui_add_field(char *name, int type, char *(*reader)(char *), void (*writer)(char *, char *));
 
 /**
- * 向UI中新增函数, 需要指定函数返回值类型
+ * Add an named method into QML's context, need specify return type.
  *
- * @param name 函数名
- * @param retType 函数返回值类型, 默认为string
- * @param argNum 函数的参数数量
- * @param callback 回调函数, 返回值必须为支持free的malloc字符串
- * @return 是否成功
+ * @param name Method's name
+ * @param retType Method's return type
+ * @param argNum Method's arguments number
+ * @param callback Method's callback, result will be free by C
+ * @return success or not
  */
 API int ui_add_method(char *name, int retType, int argNum, char *(*callback)(char *, char *));
 
 /**
- * 通知UI中指定属性已更新, 触发QML中的属性绑定
- * @param name 属性名
- * @return 是否成功
+ * Notify the named field was updated, try trigger QML's binding property.
+ * @param name Field's name
+ * @return success or not
  */
 API int ui_notify_field(char *name);
 
 /**
- * 激活UI中指定名称的事件, 并携带指定类型的数据
+ * Trigger the named event, with specified data.
  *
- * @param name 事件名称
- * @param dataType 数据类型
- * @param data 数据体
+ * @param name Event's name
+ * @param dataType Event's data type
+ * @param data Event's data
  */
 API void ui_trigger_event(char *name, int dataType, char *data);
 
 /**
- * 添加资源文件, UI会将此资源作为RCC加载.
+ * Add the specified RCC into Qt resources.
  *
- * @param prefix 资源前缀
- * @param data 必须为RCC格式
+ * @param prefix Resource's prefix
+ * @param data Resources's RCC data
  */
 API void ui_add_resource(char *prefix, char *data);
 
 /**
- * 添加资源文件搜索路径
- * @param path 搜索路径
+ * Add the specified path into Qt resource path.
+ *
+ * @param path Could be filepath
  */
 API void ui_add_resource_path(char *path);
 
 /**
- * 增加Import路径, 可用于identified modules.
- * @param path import路径
+ * Add the specified path into Qt's import path, could be used for identified modules.
+ *
+ * @param path New import path
  */
 API void ui_add_import_path(char *path);
 
 /**
- * 添加资源文件映射规则, 可用于灵活定制资源文件分布.
- * <d>暂不支持：在QML中即可直接以`${prefix}:`命名path中的资源文件.</d>
+ * Add new resource's mapping role.
+ * <d>Unsupported： In QML, could use `${prefix}:` to locate resource directly.</d>
  *
- * @param prefix 搜索前缀, e.g: img
- * @param path 搜索路径, e.g.1: /a/b/c; e.g.2: qrc:/img/
+ * @param prefix Resource search prefix, e.g: img
+ * @param path Resource search path, e.g.1: /a/b/c; e.g.2: qrc:/img/
  */
 API void ui_map_resource(char *prefix, char *path);
 
 /**
- * Run模式: UI启动入口, 启动成功后将阻塞直至UI退出。
+ * UI's entry-point, will block until fail or exit.
  *
- * @param root UI入口
- * @return 退出码
+ * @param root Should be an QML path
+ * @return code
  */
 API int ui_start(char *root);
 
 /**
- * 工具接口：设置HTTP代理
- * @param host 代理主机
- * @param port 代理端口
+ * TOOL: setup application's http proxy
+ * @param host Proxy's host name
+ * @param port Proxy's port
  */
 API void ui_tool_set_http_proxy(char *host, int port);
 
 /**
- * 工具接口：设置是否启用debug日志
- * @param enable 是否启用Debug日志
+ * TOOL: setup whether enable debug level log or not
+ * @param enable Whether enable debug log or not
  */  
 API void ui_tool_set_debug_enabled(int enable);
 
