@@ -16,10 +16,40 @@ static PropertyNode *root = nullptr;
 static QApplication *app = nullptr;
 static QQmlApplicationEngine *engine = nullptr;
 static QMap<QString, QObject*> contextProperties;
+static void (*logCallback)(int, char *);
+
+// log handler
+void logHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+    QByteArray localMsg = msg.toLocal8Bit();
+    if (logCallback != nullptr) {
+        const char *msg = localMsg.data();
+        logCallback(type, const_cast<char*>(msg));
+        return;
+    }
+    const char *file = context.file ? context.file : "";
+    const char *function = context.function ? context.function : "";
+    switch (type) {
+    case QtDebugMsg:
+        fprintf(stderr, "Debug: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
+        break;
+    case QtInfoMsg:
+        fprintf(stderr, "Info: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
+        break;
+    case QtWarningMsg:
+        fprintf(stderr, "Warning: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
+        break;
+    case QtCriticalMsg:
+        fprintf(stderr, "Critical: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
+        break;
+    case QtFatalMsg:
+        fprintf(stderr, "Fatal: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
+        break;
+    }
+}
 
 // init QT context
 API void ui_init(int argc, char **argv) {
-    qSetMessagePattern("%{time yyyy-MM-dd hh:mm:ss} [%{type}] : %{message}");
+    qInstallMessageHandler(logHandler);
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     // For Qt5.9
@@ -48,6 +78,11 @@ API void ui_init(int argc, char **argv) {
     qmlRegisterType<HotKeyItem>("Goxui", 1, 0, "HotKey");
 
     engine = new QQmlApplicationEngine();
+}
+
+// setup logger
+API void ui_set_logger(void (*logger)(int, char *)){
+    logCallback = logger;
 }
 
 // Add an QObject into QML's context
