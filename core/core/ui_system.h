@@ -10,12 +10,11 @@
 #include <QObject>
 #include <QDateTime>
 #include <QQmlApplicationEngine>
-#include <QQmlAbstractUrlInterceptor>
 
 /**
  * 向UI暴露的系统工具API
  */
-class UISystem : public QObject, public QQmlAbstractUrlInterceptor {
+class UISystem : public QObject {
 Q_OBJECT
 
     QQmlApplicationEngine *engine;
@@ -38,10 +37,6 @@ public:
      * exec保存文件的对话框, 此函数阻塞直至对话框结束
      */
     Q_INVOKABLE QVariantMap execSaveFileDialog(QString defaultName, QStringList nameFilters);
-    
-public:
-
-    virtual QUrl intercept(const QUrl &path, DataType type) override;
 
 };
 

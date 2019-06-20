@@ -1,4 +1,4 @@
-QT          += widgets qml quick concurrent core-private
+QT          += widgets qml quick concurrent core-private quick-private
 
 TEMPLATE    = lib
 CONFIG      += staticlib
@@ -11,14 +11,16 @@ HEADERS += \
         $$PWD/core/ui_system.h \
         $$PWD/item/item_hotkey.h \
         $$PWD/item/item_window.h \
-        $$PWD/item/item_event.h
+        $$PWD/item/item_event.h \
+        $$PWD/item/item_loader.h
 
 SOURCES += \
         $$PWD/goxui.cpp \
         $$PWD/core/ui_property.cpp \
         $$PWD/core/ui_system.cpp \
         $$PWD/item/item_hotkey.cpp \
-        $$PWD/item/item_event.cpp
+        $$PWD/item/item_event.cpp \
+        $$PWD/item/item_loader.cpp
 
 mac: {
     SOURCES += $$PWD/item/item_window_mac.mm

@@ -22,11 +22,10 @@ static void (*logCallback)(int type, char *catagory, char* file, int line, char*
 void logHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
     QByteArray localMsg = msg.toLocal8Bit();
     if (logCallback != nullptr) {
-        const char *catagory = context.category;
-        const char *file = context.file;
+        char *catagory = const_cast<char*>(context.category);
+        char *file = const_cast<char*>(context.file);
         int line = context.line;
-        const char *msg = localMsg.data();
-        logCallback(type, const_cast<char*>(catagory), const_cast<char*>(file), line, const_cast<char*>(msg));
+        logCallback(type, catagory, file, line, const_cast<char*>(msg.toLocal8Bit().data()));
         return;
     }
     const char *file = context.file ? context.file : "";
@@ -79,8 +78,12 @@ API void ui_init(int argc, char **argv) {
     qmlRegisterType<WindowTitleItem>("Goxui", 1, 0, "TitleBar");
     qmlRegisterType<EventItem>("Goxui", 1, 0, "Event");
     qmlRegisterType<HotKeyItem>("Goxui", 1, 0, "HotKey");
+    qmlRegisterType<LoaderItem>("Goxui", 1, 0, "Loader");
 
     engine = new QQmlApplicationEngine();
+
+    // bind engine
+    LoaderItem::engine = engine;
 }
 
 // setup logger
@@ -205,14 +208,10 @@ API int ui_start(char *qml) {
     engine->rootContext()->setContextObject(root);
 
     // setup context properties
-    UISystem *system = new UISystem(engine);
-    contextProperties.insert("system", system);
+    contextProperties.insert("system", new UISystem(engine));
     for(auto name : contextProperties.keys()) {
         engine->rootContext()->setContextProperty(name, contextProperties.value(name));
     }
-
-    // setup interceptor
-    engine->setUrlInterceptor(system);
 
     // start~
     QString rootQML(qml);
@@ -221,7 +220,6 @@ API int ui_start(char *qml) {
     int code = app->exec();
 
     // clear
-    delete system;
     delete engine;
     delete root;
 

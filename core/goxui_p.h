@@ -8,6 +8,7 @@
 #include "item/item_hotkey.h"
 #include "item/item_window.h"
 #include "item/item_event.h"
+#include "item/item_loader.h"
 #include "core/ui_system.h"
 #include "core/ui_property.h"
 #include "goxui.h"

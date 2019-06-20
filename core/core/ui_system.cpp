@@ -11,7 +11,7 @@
 
 #include "ui_system.h"
 
-UISystem::UISystem(QQmlApplicationEngine *engine) : QObject(engine) , QQmlAbstractUrlInterceptor() {
+UISystem::UISystem(QQmlApplicationEngine *engine) : QObject(engine) {
     this->engine = engine;
 }
 
@@ -37,16 +37,4 @@ QVariantMap UISystem::execSaveFileDialog(QString defaultName, QStringList nameFi
     result["file"] = dialog.selectedFiles();
     result["nameFilter"] = dialog.selectedNameFilter();
     return result;
-}
-
-
-QUrl UISystem::intercept(const QUrl &path, DataType type) {
-    if (type == DataType::QmlFile) {
-        QUrlQuery query = QUrlQuery(path);
-        if (query.hasQueryItem("_")) {
-            qDebug() << "clear component cache";
-            engine->clearComponentCache();
-        }
-    }
-    return path;
 }
