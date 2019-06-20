@@ -10,11 +10,12 @@
 #include <QObject>
 #include <QDateTime>
 #include <QQmlApplicationEngine>
+#include <QQmlAbstractUrlInterceptor>
 
 /**
  * 向UI暴露的系统工具API
  */
-class UISystem : public QObject {
+class UISystem : public QObject, public QQmlAbstractUrlInterceptor {
 Q_OBJECT
 
     QQmlApplicationEngine *engine;
@@ -38,6 +39,10 @@ public:
      */
     Q_INVOKABLE QVariantMap execSaveFileDialog(QString defaultName, QStringList nameFilters);
     
+public:
+
+    virtual QUrl intercept(const QUrl &path, DataType type) override;
+
 };
 
 

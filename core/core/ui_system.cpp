@@ -7,10 +7,11 @@
 #include <QNetworkProxy>
 #include <QFileDialog>
 #include <QDebug>
+#include <QUrlQuery>
 
 #include "ui_system.h"
 
-UISystem::UISystem(QQmlApplicationEngine *engine) : QObject(engine) {
+UISystem::UISystem(QQmlApplicationEngine *engine) : QObject(engine) , QQmlAbstractUrlInterceptor() {
     this->engine = engine;
 }
 
@@ -36,4 +37,16 @@ QVariantMap UISystem::execSaveFileDialog(QString defaultName, QStringList nameFi
     result["file"] = dialog.selectedFiles();
     result["nameFilter"] = dialog.selectedNameFilter();
     return result;
+}
+
+
+QUrl UISystem::intercept(const QUrl &path, DataType type) {
+    if (type == DataType::QmlFile) {
+        QUrlQuery query = QUrlQuery(path);
+        if (query.hasQueryItem("_")) {
+            qDebug() << "clear component cache";
+            engine->clearComponentCache();
+        }
+    }
+    return path;
 }
