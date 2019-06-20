@@ -202,7 +202,7 @@ API int ui_start(char *qml) {
     engine->rootContext()->setContextObject(root);
 
     // setup context properties
-    UISystem* system = new UISystem(engine);
+    UISystem *system = new UISystem(engine);
     contextProperties.insert("system", system);
     for(auto name : contextProperties.keys()) {
         engine->rootContext()->setContextProperty(name, contextProperties.value(name));
@@ -215,7 +215,14 @@ API int ui_start(char *qml) {
     QString rootQML(qml);
     engine->load(rootQML);
 
-    return app->exec();
+    int code = app->exec();
+
+    // clear
+    delete system;
+    delete engine;
+    delete root;
+
+    return code;
 }
 
 // TOOL: setup the http proxy of Application

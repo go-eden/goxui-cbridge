@@ -5,9 +5,7 @@
 #include "item_hotkey.h"
 
 HotKeyItem::HotKeyItem(QObject *parent) : QObject(parent) {
-    QObject::connect(&hotkey, &QHotkey::activated, [=]() {
-        emit this->activated();
-    });
+    this->hotkey = nullptr;
 }
 
 QString HotKeyItem::getSequence() {
@@ -15,10 +13,28 @@ QString HotKeyItem::getSequence() {
 }
 
 void HotKeyItem::setSequence(QString key) {
+    // release old hotkey
+    this->releaseHotKey();
+
+    // create new hotkey
+    qDebug() << "bind hotkey: "<< key;
+    QHotkey* hk = new QHotkey(QKeySequence(key), true);
+    QObject::connect(hk, &QHotkey::activated, [=]() {
+        emit this->activated();
+    });
+    this->hotkey = hk;
     this->sequence = key;
-    this->hotkey.setShortcut(QKeySequence(key), true);
+}
+
+void HotKeyItem::releaseHotKey() {
+    if (!this->hotkey) {
+        return;
+    }
+    qDebug() << "release hotkey: "<< this->sequence;
+    delete this->hotkey;
+    this->hotkey = nullptr;
 }
 
 HotKeyItem::~HotKeyItem() {
-    this->hotkey.setRegistered(false);
+    this->releaseHotKey();
 }

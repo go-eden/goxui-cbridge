@@ -14,8 +14,8 @@ Q_OBJECT
     Q_PROPERTY(QString sequence READ getSequence WRITE setSequence)
     
 private:
-    QHotkey hotkey;
     QString sequence;
+    QHotkey *hotkey;
 
 public:
     explicit HotKeyItem(QObject *parent = nullptr);
@@ -25,6 +25,9 @@ public:
     void setSequence(QString key);
 
     ~HotKeyItem();
+
+private:
+    void releaseHotKey();
 
 signals:
 
