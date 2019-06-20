@@ -24,6 +24,8 @@ public:
 
     void setSequence(QString key);
 
+    ~HotKeyItem();
+
 signals:
 
     void activated();

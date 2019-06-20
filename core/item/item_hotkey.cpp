@@ -18,3 +18,7 @@ void HotKeyItem::setSequence(QString key) {
     this->sequence = key;
     this->hotkey.setShortcut(QKeySequence(key), true);
 }
+
+HotKeyItem::~HotKeyItem() {
+    this->hotkey.setRegistered(false);
+}
