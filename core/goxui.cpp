@@ -16,14 +16,17 @@ static PropertyNode *root = nullptr;
 static QApplication *app = nullptr;
 static QQmlApplicationEngine *engine = nullptr;
 static QMap<QString, QObject*> contextProperties;
-static void (*logCallback)(int, char *);
+static void (*logCallback)(int type, char *catagory, char* file, int line, char* msg);
 
 // log handler
 void logHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
     QByteArray localMsg = msg.toLocal8Bit();
     if (logCallback != nullptr) {
+        const char *catagory = context.category;
+        const char *file = context.file;
+        int line = context.line;
         const char *msg = localMsg.data();
-        logCallback(type, const_cast<char*>(msg));
+        logCallback(type, const_cast<char*>(catagory), const_cast<char*>(file), line, const_cast<char*>(msg));
         return;
     }
     const char *file = context.file ? context.file : "";
@@ -81,7 +84,7 @@ API void ui_init(int argc, char **argv) {
 }
 
 // setup logger
-API void ui_set_logger(void (*logger)(int, char *)){
+API void ui_set_logger(void (*logger)(int type, char *catagory, char* file, int line, char* msg)){
     logCallback = logger;
 }
 
