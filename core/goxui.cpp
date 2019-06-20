@@ -202,10 +202,14 @@ API int ui_start(char *qml) {
     engine->rootContext()->setContextObject(root);
 
     // setup context properties
-    contextProperties.insert("system", new UISystem(engine));
+    UISystem* system = new UISystem(engine);
+    contextProperties.insert("system", system);
     for(auto name : contextProperties.keys()) {
         engine->rootContext()->setContextProperty(name, contextProperties.value(name));
     }
+
+    // setup interceptor
+    engine->setUrlInterceptor(system);
 
     // start~
     QString rootQML(qml);
@@ -221,9 +225,4 @@ API void ui_tool_set_http_proxy(char *host, int port) {
     proxy.setHostName(host);
     proxy.setPort(static_cast<quint16>(port));
     QNetworkProxy::setApplicationProxy(proxy);
-}
-
-// TOOL: setup debug level's enable status
-API void ui_tool_set_debug_enabled(int enable) {
-    QLoggingCategory::defaultCategory()->setEnabled(QtMsgType::QtDebugMsg, enable!=0);
 }

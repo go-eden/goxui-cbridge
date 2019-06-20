@@ -127,12 +127,6 @@ API int ui_start(char *root);
  */
 API void ui_tool_set_http_proxy(char *host, int port);
 
-/**
- * TOOL: setup whether enable debug level log or not
- * @param enable Whether enable debug log or not
- */  
-API void ui_tool_set_debug_enabled(int enable);
-
 #ifdef __cplusplus
 }
 #endif
