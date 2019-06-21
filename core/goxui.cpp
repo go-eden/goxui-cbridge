@@ -78,12 +78,8 @@ API void ui_init(int argc, char **argv) {
     qmlRegisterType<WindowTitleItem>("Goxui", 1, 0, "TitleBar");
     qmlRegisterType<EventItem>("Goxui", 1, 0, "Event");
     qmlRegisterType<HotKeyItem>("Goxui", 1, 0, "HotKey");
-    qmlRegisterType<LoaderItem>("Goxui", 1, 0, "Loader");
 
     engine = new QQmlApplicationEngine();
-
-    // bind engine
-    LoaderItem::engine = engine;
 }
 
 // setup logger
