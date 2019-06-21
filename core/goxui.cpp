@@ -16,16 +16,15 @@ static PropertyNode *root = nullptr;
 static QApplication *app = nullptr;
 static QQmlApplicationEngine *engine = nullptr;
 static QMap<QString, QObject*> contextProperties;
-static void (*logCallback)(int type, char *catagory, char* file, int line, char* msg);
+static void (*logCallback)(int type, char* file, int line, char* msg);
 
 // log handler
 void logHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
     QByteArray localMsg = msg.toLocal8Bit();
     if (logCallback != nullptr) {
-        char *catagory = const_cast<char*>(context.category);
         char *file = const_cast<char*>(context.file);
         int line = context.line;
-        logCallback(type, catagory, file, line, const_cast<char*>(msg.toLocal8Bit().data()));
+        logCallback(type, file, line, const_cast<char*>(msg.toLocal8Bit().data()));
         return;
     }
     const char *file = context.file ? context.file : "";
@@ -53,6 +52,7 @@ void logHandler(QtMsgType type, const QMessageLogContext &context, const QString
 API void ui_init(int argc, char **argv) {
     qInstallMessageHandler(logHandler);
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QLoggingCategory::defaultCategory()->setEnabled(QtMsgType::QtDebugMsg, true);
 
     // For Qt5.9
     if (QT_VERSION_MINOR != 12) {
@@ -83,7 +83,7 @@ API void ui_init(int argc, char **argv) {
 }
 
 // setup logger
-API void ui_set_logger(void (*logger)(int type, char *catagory, char* file, int line, char* msg)){
+API void ui_set_logger(void (*logger)(int type, char* file, int line, char* msg)){
     logCallback = logger;
 }
 
