@@ -14,7 +14,7 @@
 
 // check whether enable single-application or not
 inline bool isEnableSingleApplication() {
-    return qgetenv("GOXUI_SINGLE_APPLICATION") != "0";
+    return qgetenv("GOXUI_SINGLE_APPLICATION") == "1";
 }
 
 // convert string data to specified type

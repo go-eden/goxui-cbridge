@@ -152,6 +152,7 @@ API void ui_trigger_event(char *name, int dataType, char *data) {
     QString str(name);
     QVariant var;
     convertStrToVar(data, dataType, var);
+    qDebug() << "ui_trigger_event: " << str <<var;
     for (auto item : EventItem::ReceverMap.values(str)) {
         if (item == nullptr) {
             continue;
