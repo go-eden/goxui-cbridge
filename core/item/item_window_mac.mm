@@ -6,14 +6,14 @@
 #include <QtConcurrent>
 #include "item_window.h"
 
-// 调整窗口的标题栏, 窗口初始化、设置标题栏、大小调整等事件需要进行这个操作
+// adjust title
 void adjustTitle(WindowItem *w, WindowTitleItem *titleItem) {
-    NSView *view = (NSView *) w->winId();
+    NSView *view = reinterpret_cast<NSView *>(w->winId());
     if (view == nullptr || view.window == nullptr || titleItem == nullptr) {
         return;
     }
     NSWindow *win = view.window;
-    static NSWindowButton arr[]{NSWindowCloseButton, NSWindowMiniaturizeButton, NSWindowZoomButton, NSWindowFullScreenButton};
+    static NSWindowButton arr[]{NSWindowCloseButton, NSWindowMiniaturizeButton, NSWindowZoomButton};
     for (int i=0, idx=0; i<4; i++) {
         NSButton *btn = [win standardWindowButton:arr[i]];
         if (btn == nullptr) {
@@ -27,7 +27,7 @@ void adjustTitle(WindowItem *w, WindowTitleItem *titleItem) {
     }
 }
 
-// 初始化标题栏, 将自己挂载在窗口之上
+// initilize titlebar, mount itself onto window
 WindowTitleItem::WindowTitleItem(QQuickItem *parent) : QQuickItem(parent) {
     this->setAcceptedMouseButtons(Qt::LeftButton);
     QObject::connect(this, &QQuickItem::windowChanged, [=](QQuickWindow *w) {
@@ -37,7 +37,7 @@ WindowTitleItem::WindowTitleItem(QQuickItem *parent) : QQuickItem(parent) {
     });
 }
 
-// 标题栏卸载
+// release
 WindowTitleItem::~WindowTitleItem() {
     if (this->window() == nullptr) {
         return;
@@ -47,7 +47,7 @@ WindowTitleItem::~WindowTitleItem() {
     }
 }
 
-// 响应双击, 改变窗口大小
+// implement resize on double click
 void WindowTitleItem::mouseDoubleClickEvent(QMouseEvent *){
     QWindow *win = this->window();
     if (win == nullptr) {
@@ -60,29 +60,28 @@ void WindowTitleItem::mouseDoubleClickEvent(QMouseEvent *){
     }
 }
 
-// 响应鼠标按下, 自动开始窗口的拖拽
+// response mousepress, begin drag operation.
 void WindowTitleItem::mousePressEvent(QMouseEvent *event){
     if (WindowItem* window = dynamic_cast<WindowItem*>(this->window())) {
         window->startDrag();
     } else {
-        QQuickItem::mousePressEvent(event); // 不让子元素感知
+        QQuickItem::mousePressEvent(event); // block children item
     }
 }
 
-// 初始化窗口, 并且注册MouseDown事件监听
+// initilize window, and register MouseDown event
 WindowItem::WindowItem(QWindow *parent) : QQuickWindow(parent) {
     this->oldRatio = 0;
     this->title = nullptr;
     this->macLastEvent = nullptr;
     this->macEventMonitor = nullptr;
-    this->setFlag(Qt::WindowFullscreenButtonHint, true); // 全屏按钮
-    // 初始化窗口, 这样做还不够
-    NSView *view = (NSView *)this->winId();
+    // init window, this isn't enough
+    NSView *view = reinterpret_cast<NSView *>(this->winId());
     NSWindow *window = view.window;
     window.styleMask |= NSFullSizeContentViewWindowMask | NSTitledWindowMask;
     window.titleVisibility = NSWindowTitleHidden;
     window.titlebarAppearsTransparent = true;
-    // 监听鼠标拖拽并转发给NSWindow
+    // listen mouse drag event and route to NSWindow
     this->macEventMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSLeftMouseDownMask handler:^(NSEvent *e) {
         this->macLastEvent = e;
         return e;
@@ -90,40 +89,42 @@ WindowItem::WindowItem(QWindow *parent) : QQuickWindow(parent) {
     adjustTitle(this, title);
 }
 
-// 窗口释放时, 需要删除事件监听
+// clear event handler
 WindowItem::~WindowItem() {
     if (this->macEventMonitor != nullptr) {
-        id tmp = (id)this->macEventMonitor;
+        id tmp = reinterpret_cast<id>(this->macEventMonitor);
         [NSEvent removeMonitor:tmp];
     }
 }
 
-// 开始拖拽
+// handle drag
 void WindowItem::startDrag() {
-    NSView *view = (NSView *)this->winId();
+    NSView *view = reinterpret_cast<NSView *>(this->winId());
     if (!this->macLastEvent || !view || !view.window) {
         return;
     }
-    NSEvent *e = (NSEvent *)this->macLastEvent; // 内存是否会被提前释放?
+    NSEvent *e = reinterpret_cast<NSEvent *>(this->macLastEvent); // will it be released earily?
     [view.window performWindowDragWithEvent:e];
 }
 
-// 挂载标题栏, 并根据标题栏来初始化 NSTitlebarAccessoryViewController
+// setup customize titlebar
 void WindowItem::setTitleBar(WindowTitleItem *item) {
-    NSView *mainView = (NSView *)this->winId();
+    NSView *mainView = reinterpret_cast<NSView *>(this->winId());
     if (mainView == nullptr || mainView.window == nullptr) {
         return;
     }
-    if (this->title) {
-        [mainView.window removeTitlebarAccessoryViewControllerAtIndex:0]; // 卸载标题栏
+    if (!this->flags().testFlag(Qt::FramelessWindowHint)) {
+        if (this->title) {
+            [mainView.window removeTitlebarAccessoryViewControllerAtIndex:0]; // remove old titlebar
+        }
+        this->title = item;
+        NSView *view = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 10, item->height() - 22)]; // default height=22
+        NSTitlebarAccessoryViewController* titleCtl = [NSTitlebarAccessoryViewController new];
+        titleCtl.view = view;
+        titleCtl.fullScreenMinHeight = 0;
+        [mainView.window addTitlebarAccessoryViewController:titleCtl];
+        adjustTitle(this, title);
     }
-    this->title = item;
-    NSView *view = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 10, item->height() - 22)]; // 减去默认标题栏高度22
-    NSTitlebarAccessoryViewController* titleCtl = [NSTitlebarAccessoryViewController new];
-    titleCtl.view = view;
-    titleCtl.fullScreenMinHeight = 0;
-    [mainView.window addTitlebarAccessoryViewController:titleCtl];
-    adjustTitle(this, title);
 }
 
 // Handle All event
@@ -132,21 +133,24 @@ bool WindowItem::event(QEvent *event) {
     if (event->type() == QEvent::MouseButtonRelease || event->type() == QEvent::FocusOut) {
         this->macLastEvent = nullptr;
     }
-    NSView *view = (NSView *)this->winId();
-    if (event->type() == QEvent::Resize) {
-        adjustTitle(this, title);
-    }
-    if (event->type() == QEvent::WindowStateChange) {
-        NSWindow *window = view.window;
-        window.styleMask |= NSFullSizeContentViewWindowMask | NSTitledWindowMask;
-        window.titleVisibility = NSWindowTitleHidden;
-        window.titlebarAppearsTransparent = true;
-        adjustTitle(this, title);
+    NSView *view = reinterpret_cast<NSView*>(this->winId());
+    // support custom title
+    if (!this->flags().testFlag(Qt::FramelessWindowHint)) {
+        if (event->type() == QEvent::Resize) {
+            adjustTitle(this, title);
+        }
+        if (event->type() == QEvent::WindowStateChange) {
+            NSWindow *window = view.window;
+            window.styleMask |= NSFullSizeContentViewWindowMask | NSTitledWindowMask;
+            window.titleVisibility = NSWindowTitleHidden;
+            window.titlebarAppearsTransparent = true;
+            adjustTitle(this, title);
+        }
     }
     // Fix ratio bug for 5.9...
     if (QT_VERSION_MINOR < 12) {
         qreal newRatio = this->devicePixelRatio();
-        if (view != nullptr && view.layer != nil && oldRatio != newRatio) {
+        if (view != nullptr && view.layer != nil && int(oldRatio) != int(newRatio)) {
             [view.layer setContentsScale: newRatio]; // Force flush ratio
             QRegion region(0, 0, width(), height());
             QWindow::exposeEvent(new QExposeEvent(region));
